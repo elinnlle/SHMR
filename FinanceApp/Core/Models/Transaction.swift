@@ -11,11 +11,11 @@ struct Transaction: Identifiable, Hashable, Codable {
     let id: Int
     let accountId: Int
     let categoryId: Int
-    var amount: Decimal
-    var comment: String?
-    var transactionDate: Date
+    let amount: Decimal
+    let comment: String?
+    let transactionDate: Date
     let createdAt: Date
-    var updatedAt: Date
+    let updatedAt: Date
 
     private enum CodingKeys: String, CodingKey {
         case id, accountId, categoryId, amount,
