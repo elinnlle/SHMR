@@ -13,7 +13,7 @@ final class BankAccountsServiceMock: BankAccountsServiceProtocol {
         userId:    .init(),
         name:      "Главный счёт",
         balance:   Decimal(100_000),
-        currency:  "RUB",
+        currency:  "₽",
         createdAt: Date(),
         updatedAt: Date()
     )
