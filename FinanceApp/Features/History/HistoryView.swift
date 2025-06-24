@@ -13,11 +13,12 @@ struct HistoryView: View {
     @State private var startDate: Date = Date().monthAgo
     @State private var endDate:   Date = Date()
     @State private var sortOption: SortOption = .date
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var showStartPicker = false
     @State private var showEndPicker   = false
 
-    @StateObject private var viewModel = ViewModel()
+    @StateObject private var viewModel = HistoryViewModel()
 
     var body: some View {
         List {
@@ -106,7 +107,12 @@ struct HistoryView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(.compact)
         .navigationTitle("Моя история")
+        .safeAreaInset(edge: .top) {
+            Color.clear
+                .frame(height: 4)
+        }
         .onAppear {
             reload()
         }
@@ -124,6 +130,19 @@ struct HistoryView: View {
         }
         .onChange(of: sortOption) { _, _ in
             viewModel.applySort(option: sortOption)
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    presentationMode.wrappedValue.dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Назад")
+                    }
+                }
+            }
         }
     }
 
@@ -154,61 +173,6 @@ struct HistoryView: View {
         f.dateFormat = "d MMMM yyyy, HH:mm"
         return f
     }()
-}
-
-extension HistoryView {
-    @MainActor
-    final class ViewModel: ObservableObject {
-        private let service: TransactionsServiceProtocol = TransactionsServiceMock()
-        @Published private(set) var transactions:       [Transaction] = []
-        @Published private(set) var sortedTransactions: [Transaction] = []
-        @Published private(set) var total:              Decimal       = 0
-
-        func load(
-            direction: Direction,
-            start: Date,
-            end: Date,
-            sort: HistoryView.SortOption
-        ) {
-            Task {
-                do {
-                    let all = try await service.transactions(
-                        for: 1,
-                        from: start,
-                        to:   end
-                    )
-                    let filtered = all.filter { $0.deducedDirection == direction }
-                    let sum      = filtered.reduce(.zero) { $0 + $1.amount }
-                    await MainActor.run {
-                        self.transactions = filtered
-                        self.total        = sum
-                        self.applySort(option: sort)
-                    }
-                } catch {
-                    print("History load error:", error)
-                }
-            }
-        }
-
-        func applySort(option: HistoryView.SortOption) {
-            switch option {
-            case .date:
-                sortedTransactions = transactions
-                    .sorted { $0.transactionDate > $1.transactionDate }
-            case .amount:
-                sortedTransactions = transactions
-                    .sorted { $0.amount > $1.amount }
-            }
-        }
-
-        var totalFormatted: String {
-            let nf = NumberFormatter()
-            nf.numberStyle    = .currency
-            nf.locale         = Locale(identifier: "ru_RU")
-            nf.currencySymbol = "₽"
-            return nf.string(for: total) ?? "\(total) ₽"
-        }
-    }
 }
 
 #Preview {

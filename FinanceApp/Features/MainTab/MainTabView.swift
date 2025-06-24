@@ -46,12 +46,18 @@ struct MainTabView: View {
         ZStack {
             Group {
                 switch selection {
-                case .outcome, .income:
+                case .outcome:
                     NavigationStack {
-                        TransactionsListView(direction: selection.direction!)
+                        TransactionsListView(direction: .outcome)
                     }
                     .tint(Color("PurpleAccent"))
 
+                case .income:
+                    NavigationStack {
+                        TransactionsListView(direction: .income)
+                    }
+                    .tint(Color("PurpleAccent"))
+                    
                 case .invoice:
                     NavigationStack {
                         Text("Счет").font(.largeTitle)
