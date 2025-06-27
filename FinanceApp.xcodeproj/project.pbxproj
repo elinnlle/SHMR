@@ -24,14 +24,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		24F240432DF9DBED00B1B6D2 /* FinanceApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FinanceApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		24F240532DF9DBEF00B1B6D2 /* FinanceAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinanceAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		24F2405D2DF9DBEF00B1B6D2 /* FinanceAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinanceAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		24C9B8722E0D7D1E005E3585 /* FinanceApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FinanceApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		24C9B8732E0D7D1E005E3585 /* FinanceAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinanceAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		24C9B8742E0D7D1E005E3585 /* FinanceAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinanceAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		244B9B122E0F1D5D007BDA9D /* Exceptions for "FinanceApp" folder in "FinanceApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 24F240422DF9DBED00B1B6D2 /* FinanceApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		24F240452DF9DBED00B1B6D2 /* FinanceApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				244B9B122E0F1D5D007BDA9D /* Exceptions for "FinanceApp" folder in "FinanceApp" target */,
+			);
 			path = FinanceApp;
 			sourceTree = "<group>";
 		};
@@ -78,18 +91,10 @@
 				24F240452DF9DBED00B1B6D2 /* FinanceApp */,
 				24F240562DF9DBEF00B1B6D2 /* FinanceAppTests */,
 				24F240602DF9DBEF00B1B6D2 /* FinanceAppUITests */,
-				24F240442DF9DBED00B1B6D2 /* Products */,
+				24C9B8722E0D7D1E005E3585 /* FinanceApp.app */,
+				24C9B8732E0D7D1E005E3585 /* FinanceAppTests.xctest */,
+				24C9B8742E0D7D1E005E3585 /* FinanceAppUITests.xctest */,
 			);
-			sourceTree = "<group>";
-		};
-		24F240442DF9DBED00B1B6D2 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				24F240432DF9DBED00B1B6D2 /* FinanceApp.app */,
-				24F240532DF9DBEF00B1B6D2 /* FinanceAppTests.xctest */,
-				24F2405D2DF9DBEF00B1B6D2 /* FinanceAppUITests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,7 +119,7 @@
 			packageProductDependencies = (
 			);
 			productName = FinanceApp;
-			productReference = 24F240432DF9DBED00B1B6D2 /* FinanceApp.app */;
+			productReference = 24C9B8722E0D7D1E005E3585 /* FinanceApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		24F240522DF9DBEF00B1B6D2 /* FinanceAppTests */ = {
@@ -137,7 +142,7 @@
 			packageProductDependencies = (
 			);
 			productName = FinanceAppTests;
-			productReference = 24F240532DF9DBEF00B1B6D2 /* FinanceAppTests.xctest */;
+			productReference = 24C9B8732E0D7D1E005E3585 /* FinanceAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		24F2405C2DF9DBEF00B1B6D2 /* FinanceAppUITests */ = {
@@ -160,7 +165,7 @@
 			packageProductDependencies = (
 			);
 			productName = FinanceAppUITests;
-			productReference = 24F2405D2DF9DBEF00B1B6D2 /* FinanceAppUITests.xctest */;
+			productReference = 24C9B8742E0D7D1E005E3585 /* FinanceAppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -192,11 +197,12 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = 24F2403A2DF9DBED00B1B6D2;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 24F240442DF9DBED00B1B6D2 /* Products */;
+			productRefGroup = 24F2403A2DF9DBED00B1B6D2;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -399,6 +405,7 @@
 				DEVELOPMENT_TEAM = Y5CLL5WZP8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FinanceApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +435,7 @@
 				DEVELOPMENT_TEAM = Y5CLL5WZP8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FinanceApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

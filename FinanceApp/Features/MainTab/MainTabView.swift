@@ -60,7 +60,7 @@ struct MainTabView: View {
                     
                 case .invoice:
                     NavigationStack {
-                        Text("Счет").font(.largeTitle)
+                        InvoiceView()
                     }
                     .tint(Color("PurpleAccent"))
 
