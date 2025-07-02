@@ -9,25 +9,25 @@ import SwiftUI
 
 struct MainTabView: View {
     enum Tab: Hashable, CaseIterable {
-        case outcome, income, invoice, articles, settings
+        case outcome, income, invoice, categories, settings
 
         var title: String {
             switch self {
-            case .outcome: return "Расходы"
-            case .income:  return "Доходы"
-            case .invoice: return "Счет"
-            case .articles:return "Статьи"
-            case .settings:return "Настройки"
+            case .outcome:    return "Расходы"
+            case .income:     return "Доходы"
+            case .invoice:    return "Счет"
+            case .categories: return "Статьи"
+            case .settings:   return "Настройки"
             }
         }
 
         var iconName: String {
             switch self {
-            case .outcome: return "OutcomeIcon"
-            case .income:  return "IncomeIcon"
-            case .invoice: return "InvoiceIcon"
-            case .articles:return "ArticlesIcon"
-            case .settings:return "SettingsIcon"
+            case .outcome:    return "OutcomeIcon"
+            case .income:     return "IncomeIcon"
+            case .invoice:    return "InvoiceIcon"
+            case .categories: return "CategoriesIcon"
+            case .settings:   return "SettingsIcon"
             }
         }
 
@@ -64,9 +64,9 @@ struct MainTabView: View {
                     }
                     .tint(Color("PurpleAccent"))
 
-                case .articles:
+                case .categories:
                     NavigationStack {
-                        Text("Статьи").font(.largeTitle)
+                        CategoriesListView()
                     }
                     .tint(Color("PurpleAccent"))
 
