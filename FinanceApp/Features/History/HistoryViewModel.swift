@@ -21,7 +21,7 @@ final class HistoryViewModel: ObservableObject {
         direction: Direction,
         start: Date,
         end: Date,
-        sort: HistoryView.SortOption
+        sort: SortOption
     ) {
         Task {
             do {
@@ -44,7 +44,7 @@ final class HistoryViewModel: ObservableObject {
     }
 
     /// Сортировка по выбранному опциону
-    func applySort(option: HistoryView.SortOption) {
+    func applySort(option: SortOption) {
         switch option {
         case .date:
             sortedTransactions = transactions
