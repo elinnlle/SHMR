@@ -11,6 +11,7 @@ struct TransactionsListView: View {
     let direction: Direction
 
     @StateObject private var viewModel = TransactionsListViewModel()
+    @State private var formMode: FormMode?
 
     var body: some View {
         List {
@@ -23,11 +24,13 @@ struct TransactionsListView: View {
             }
 
             Section("Операции") {
-                LazyVStack {
-                    ForEach(viewModel.transactions) { tx in
-                        TransactionRowView(transaction: tx)
+                ForEach(viewModel.transactions) { tx in
+                        Button {
+                            formMode = .edit(tx)
+                        } label: {
+                            TransactionRowView(transaction: tx)
+                       }
                     }
-                }
             }
         }
         .listStyle(.insetGrouped)
@@ -48,8 +51,62 @@ struct TransactionsListView: View {
                 }
             }
         }
+        .navigationTitle(direction == .income ? "Доходы сегодня" : "Расходы сегодня")
+        .overlay(
+            Button {
+                formMode = .create
+            } label: {
+                Image("PlusIcon")
+                    .resizable()
+                    .frame(width: 56, height: 56)
+            }
+                .padding(.trailing, 16)
+                .padding(.bottom, 86),
+            alignment: .bottomTrailing
+        )
+        .sheet(item: $formMode) { mode in
+            let tfMode: TransactionFormView.Mode = {
+                switch mode {
+                case .create:
+                    return .create
+                case .edit(let tx):
+                    return .edit(tx)
+                }
+            }()
+
+            TransactionFormView(mode: tfMode, direction: direction)
+        }
         .onAppear {
             viewModel.load(direction: direction)
+        }
+    }
+}
+
+struct CreateTransactionView: View {
+    let direction: Direction
+
+    var body: some View {
+        VStack {
+            Text("Создание операции")
+                .font(.title2)
+                .padding()
+            Spacer()
+        }
+        .navigationTitle(direction == .income ? "Новый доход" : "Новый расход")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+enum FormMode: Identifiable {
+    case create
+    case edit(Transaction)
+
+    var id: Int {
+        switch self {
+        case .create:
+            return -1
+        case .edit(let tx):
+            return tx.id
         }
     }
 }
