@@ -13,6 +13,7 @@ final class TransactionsListViewModel: ObservableObject {
     @Published private(set) var total: Decimal = 0
 
     private let service: TransactionsServiceProtocol = TransactionsServiceMock()
+    private let accountsService: BankAccountsServiceProtocol = BankAccountsServiceMock()
     
     func load(direction: Direction) {
         Task {
@@ -37,6 +38,7 @@ final class TransactionsListViewModel: ObservableObject {
         let nf = NumberFormatter()
         nf.locale = Locale(identifier: "ru_RU")
         nf.numberStyle = .currency
-        return nf.string(for: total) ?? "\(total) ₽"
+        let absTotal = total < 0 ? -total : total
+        return nf.string(for: absTotal) ?? "\(absTotal) ₽"
     }
 }

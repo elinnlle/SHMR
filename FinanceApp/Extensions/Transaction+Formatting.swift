@@ -1,4 +1,4 @@
-
+//
 //  Transaction+Formatting.swift
 //  FinanceApp
 //
@@ -12,7 +12,8 @@ extension Transaction {
         let nf = NumberFormatter()
         nf.locale = Locale(identifier: "ru_RU")
         nf.numberStyle = .currency
-        return nf.string(for: amount) ?? "\(amount) ₽"
+        let value = amount < 0 ? -amount : amount
+        return nf.string(for: value) ?? "\(value) ₽"
     }
 
     var deducedDirection: Direction {
