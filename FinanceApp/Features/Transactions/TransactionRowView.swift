@@ -54,11 +54,13 @@ struct TransactionRowView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
-        .task { await loadCategory() }
+        .task(id: transaction.categoryId) {
+            await loadCategory()
+        }
+
     }
 
     private func loadCategory() async {
-        guard category == nil else { return }
         do {
             let cats = try await catsService.categories()
             category = cats.first { $0.id == transaction.categoryId }

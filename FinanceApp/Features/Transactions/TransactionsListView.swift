@@ -64,7 +64,11 @@ struct TransactionsListView: View {
                 .padding(.bottom, 86),
             alignment: .bottomTrailing
         )
-        .sheet(item: $formMode) { mode in
+        .sheet(item: $formMode,
+               onDismiss: {
+            viewModel.load(direction: direction)
+        }
+        ) { mode in
             let tfMode: TransactionFormView.Mode = {
                 switch mode {
                 case .create:

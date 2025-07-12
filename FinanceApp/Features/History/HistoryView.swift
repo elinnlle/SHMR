@@ -132,10 +132,7 @@ struct HistoryView: View {
             .onChange(of: sortOption) { _, _ in
                 viewModel.applySort(option: sortOption)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .transactionsChanged)) { _ in
-                reload()
-            }
-
+            
             // Фон затемнения при показе попапа
             if showStartPicker || showEndPicker {
                 Color.black.opacity(0.3)

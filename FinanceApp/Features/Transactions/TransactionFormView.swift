@@ -215,7 +215,6 @@ struct TransactionFormView: View {
                         updatedAt: Date()
                     )
                     try await txnService.create(newTx)
-                    NotificationCenter.default.post(name: .transactionsChanged, object: nil)
 
                 case .edit(let tx):
                     let updatedTx = Transaction(
@@ -229,9 +228,9 @@ struct TransactionFormView: View {
                         updatedAt: Date()
                     )
                     try await txnService.update(updatedTx)
-                    NotificationCenter.default.post(name: .transactionsChanged, object: nil)
                 }
-                await MainActor.run { dismiss() }
+
+                dismiss()
             } catch {
                 // обработка ошибок сервиса
             }
