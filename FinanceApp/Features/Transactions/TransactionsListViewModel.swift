@@ -12,7 +12,7 @@ final class TransactionsListViewModel: ObservableObject {
     @Published private(set) var transactions: [Transaction] = []
     @Published private(set) var total: Decimal = 0
 
-    private let service: TransactionsServiceProtocol = TransactionsServiceMock()
+    private let service: TransactionsServiceProtocol = TransactionsServiceMock.shared
     private let accountsService: BankAccountsServiceProtocol = BankAccountsServiceMock()
     
     func load(direction: Direction) {
@@ -21,7 +21,7 @@ final class TransactionsListViewModel: ObservableObject {
                 let today = Date()
                 let start = today.startOfDay
                 let end = today.endOfDay
-                let fetched = try await service.transactions(for: 1, from: start, to: end)
+                let fetched = try await service.transactions(for: 0, from: start, to: end)
                 let filtered = fetched.filter { $0.deducedDirection == direction }
                 let sum = filtered.reduce(Decimal.zero) { $0 + $1.amount }
                 await MainActor.run {

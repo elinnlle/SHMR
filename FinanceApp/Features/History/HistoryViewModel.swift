@@ -10,7 +10,7 @@ import Combine
 
 @MainActor
 final class HistoryViewModel: ObservableObject {
-    private let service: TransactionsServiceProtocol = TransactionsServiceMock()
+    private let service: TransactionsServiceProtocol = TransactionsServiceMock.shared
     
     @Published private(set) var transactions:       [Transaction] = []
     @Published private(set) var sortedTransactions: [Transaction] = []
@@ -61,6 +61,7 @@ final class HistoryViewModel: ObservableObject {
         nf.numberStyle    = .currency
         nf.locale         = Locale(identifier: "ru_RU")
         nf.currencySymbol = "₽"
-        return nf.string(for: total) ?? "\(total) ₽"
+        let absTotal = total < 0 ? -total : total
+        return nf.string(for: absTotal) ?? "\(absTotal) ₽"
     }
 }

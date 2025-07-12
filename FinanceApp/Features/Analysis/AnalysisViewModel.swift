@@ -17,11 +17,11 @@ final class AnalysisViewModel {
     @Published private(set) var total:              Decimal       = .zero
 
     // MARK: Private
-    private let service: TransactionsServiceProtocol
+    private var service: TransactionsServiceProtocol = TransactionsServiceMock.shared
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: Init
-    init(service: TransactionsServiceProtocol = TransactionsServiceMock()) {
+    init(service: TransactionsServiceProtocol = TransactionsServiceMock.shared) {
         self.service = service
     }
 
@@ -65,7 +65,8 @@ final class AnalysisViewModel {
         nf.locale         = Locale(identifier: "ru_RU")
         nf.numberStyle    = .currency
         nf.currencySymbol = "₽"
-        return nf.string(for: total) ?? "\(total) ₽"
+        let absTotal = total < 0 ? -total : total
+        return nf.string(for: absTotal) ?? "\(absTotal) ₽"
     }
 
     enum SortOption: Int, CaseIterable {

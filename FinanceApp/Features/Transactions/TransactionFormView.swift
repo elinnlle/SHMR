@@ -27,7 +27,7 @@ struct TransactionFormView: View {
     @State private var comment: String = ""
     @State private var showValidationError = false
 
-    private let txnService: TransactionsServiceProtocol     = TransactionsServiceMock()
+    private let txnService: TransactionsServiceProtocol      = TransactionsServiceMock.shared
     private let accountsService: BankAccountsServiceProtocol = BankAccountsServiceMock()
     private let catsService: CategoriesServiceProtocol       = CategoriesServiceMock()
     @State private var account: BankAccount?
@@ -215,6 +215,7 @@ struct TransactionFormView: View {
                         updatedAt: Date()
                     )
                     try await txnService.create(newTx)
+                    NotificationCenter.default.post(name: .transactionsChanged, object: nil)
 
                 case .edit(let tx):
                     let updatedTx = Transaction(
@@ -228,9 +229,9 @@ struct TransactionFormView: View {
                         updatedAt: Date()
                     )
                     try await txnService.update(updatedTx)
+                    NotificationCenter.default.post(name: .transactionsChanged, object: nil)
                 }
-
-                dismiss()
+                await MainActor.run { dismiss() }
             } catch {
                 // обработка ошибок сервиса
             }
