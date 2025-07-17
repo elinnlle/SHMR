@@ -15,6 +15,7 @@ struct TransactionFormView: View {
 
     let mode: Mode
     let direction: Direction
+    @EnvironmentObject private var ui: UIEvents
     @Environment(\.dismiss) private var dismiss
 
     @State private var categories: [Category] = []
@@ -27,9 +28,9 @@ struct TransactionFormView: View {
     @State private var comment: String = ""
     @State private var showValidationError = false
 
-    private let txnService: TransactionsServiceProtocol      = TransactionsServiceMock.shared
-    private let accountsService: BankAccountsServiceProtocol = BankAccountsServiceMock()
-    private let catsService: CategoriesServiceProtocol       = CategoriesServiceMock()
+    private let txnService: TransactionsServiceProtocol      = TransactionsService()
+    private let accountsService: BankAccountsServiceProtocol = BankAccountsService()
+    private let catsService: CategoriesServiceProtocol       = CategoriesService()
     @State private var account: BankAccount?
 
     private let decimalSeparator = Locale.current.decimalSeparator ?? "."
@@ -200,7 +201,7 @@ struct TransactionFormView: View {
         Task {
             do {
                 let unsigned = amountValue!
-                let signedAmount = direction == .income ? unsigned : -unsigned
+                let amountToSend = unsigned // не инвертируем знак
 
                 switch mode {
                 case .create:
@@ -208,9 +209,9 @@ struct TransactionFormView: View {
                         id: .random(in: 10_000...99_999),
                         accountId: acc.id,
                         categoryId: cat.id,
-                        amount: signedAmount,
-                        comment: comment,
+                        amount: amountToSend,
                         transactionDate: finalDate,
+                        comment: comment,
                         createdAt: Date(),
                         updatedAt: Date()
                     )
@@ -221,9 +222,9 @@ struct TransactionFormView: View {
                         id: tx.id,
                         accountId: acc.id,
                         categoryId: cat.id,
-                        amount: signedAmount,
-                        comment: comment,
+                        amount: amountToSend,
                         transactionDate: finalDate,
+                        comment: comment,
                         createdAt: tx.createdAt,
                         updatedAt: Date()
                     )
@@ -232,7 +233,7 @@ struct TransactionFormView: View {
 
                 dismiss()
             } catch {
-                // обработка ошибок сервиса
+                print("Ошибка при сохранении транзакции: \(error)")
             }
         }
     }

@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct FinanceAppApp: App {
+    @StateObject private var uiEvents = UIEvents()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(uiEvents)
         }
     }
 }

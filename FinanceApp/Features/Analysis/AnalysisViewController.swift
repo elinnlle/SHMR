@@ -12,22 +12,25 @@ import SwiftUI  // для DateTimePickerPopup, потому что он уже �
 final class AnalysisViewController: UIViewController {
     // MARK: Public
     var direction: Direction = .outcome
-
+    var accountId: Int = 0
+    
     // MARK: UI
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     private let overlayView = UIView()
     private var pickerHost: UIHostingController<DateTimePickerPopup>?
-
+    
     // MARK: State
     private let viewModel = AnalysisViewModel()
     private var cancellables = Set<AnyCancellable>()
-
+    
     private var showStartPicker = false
     private var showEndPicker   = false
-
+    
     private var startDate: Date = Date().monthAgo
     private var endDate:   Date = Date()
     private var sortOption: SortOption = .date
+    
+    private let spinner = UIActivityIndicatorView(style: .large)
     
     private var currentTransactions: [Transaction] {
         return viewModel.sortedTransactions
@@ -79,6 +82,7 @@ final class AnalysisViewController: UIViewController {
         setupTableHeader()
         setupTableView()
         setupOverlay()
+        setupSpinner()
         setupBindings()
         loadData()
     }
@@ -169,6 +173,40 @@ final class AnalysisViewController: UIViewController {
         )
         overlayView.addGestureRecognizer(tap)
     }
+    
+    private func setupSpinner() {
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        view.addSubview(spinner)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    private func showLoading() {
+        DispatchQueue.main.async {
+            self.spinner.startAnimating()
+        }
+    }
+    
+    private func hideLoading() {
+        DispatchQueue.main.async {
+            self.spinner.stopAnimating()
+        }
+    }
+    
+    private func presentError(_ error: Error) {
+        let alert = UIAlertController(
+            title: "Ошибка",
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        DispatchQueue.main.async {
+            self.present(alert, animated: true)
+        }
+    }
 
     private func setupBindings() {
         viewModel.$sortedTransactions
@@ -182,12 +220,22 @@ final class AnalysisViewController: UIViewController {
 
     // MARK: Data
     private func loadData() {
-        viewModel.load(
-            direction: direction,
-            start:     startDate,
-            end:       endDate,
-            sort:      sortOption
-        )
+        Task {
+            showLoading()
+            do {
+                try await viewModel.reload(
+                    direction: direction,
+                    start:     startDate,
+                    end:       endDate,
+                    sort:      sortOption,
+                    accountId: accountId
+                )
+            } catch {
+                presentError(error)
+            }
+            hideLoading()
+        }
+        
     }
 }
 
@@ -329,13 +377,33 @@ extension AnalysisViewController: UITableViewDelegate {
         _ tableView: UITableView,
         didSelectRowAt indexPath: IndexPath
     ) {
-        guard indexPath.section == 0 else { return }
-        switch indexPath.row {
-        case 0: presentPicker(kind: .start)
-        case 1: presentPicker(kind: .end)
-        default: break
-        }
         tableView.deselectRow(at: indexPath, animated: true)
+
+        switch indexPath.section {
+        case 0:
+            // Секция "Дата начала/конца"
+            switch indexPath.row {
+            case 0:
+                presentPicker(kind: .start)
+            case 1:
+                presentPicker(kind: .end)
+            default:
+                break
+            }
+
+        case 1:
+            let tx = displayedTransactions[indexPath.row]
+            let form = TransactionFormView(mode: .edit(tx), direction: direction)
+                .onDisappear {
+                    self.loadData()
+                }
+            let host = UIHostingController(rootView: form)
+            host.modalPresentationStyle = .automatic
+            present(host, animated: true)
+
+        default:
+            break
+        }
     }
 
     private enum PickerKind { case start, end }

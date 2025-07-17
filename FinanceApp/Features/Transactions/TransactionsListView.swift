@@ -9,7 +9,9 @@ import SwiftUI
 
 struct TransactionsListView: View {
     let direction: Direction
+    let accountId: Int
 
+    @EnvironmentObject private var ui: UIEvents
     @StateObject private var viewModel = TransactionsListViewModel()
     @State private var formMode: FormMode?
 
@@ -43,7 +45,7 @@ struct TransactionsListView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink {
-                    HistoryView(direction: direction)
+                    HistoryView(direction: direction, accountId: accountId)
                 } label: {
                     Image("HistoryIcon")
                         .renderingMode(.template)
@@ -66,7 +68,7 @@ struct TransactionsListView: View {
         )
         .sheet(item: $formMode,
                onDismiss: {
-            viewModel.load(direction: direction)
+            viewModel.load(direction: direction, accountId: accountId)
         }
         ) { mode in
             let tfMode: TransactionFormView.Mode = {
@@ -80,8 +82,14 @@ struct TransactionsListView: View {
 
             TransactionFormView(mode: tfMode, direction: direction)
         }
+
+        .withLoadAndAlerts()
         .onAppear {
-            viewModel.load(direction: direction)
+            Task {
+                await ui.run {
+                    try await viewModel.reload(direction: direction, accountId: accountId)
+                }
+            }
         }
     }
 }
@@ -117,6 +125,6 @@ enum FormMode: Identifiable {
 
 #Preview {
     NavigationStack {
-        TransactionsListView(direction: .outcome)
+        TransactionsListView(direction: .outcome, accountId: 0)
     }
 }

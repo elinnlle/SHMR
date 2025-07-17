@@ -9,22 +9,25 @@ import SwiftUI
 
 struct CategoriesListView: View {
 
-    let categories: [Category]
-
-    init(categories: [Category] = []) {
-        self.categories = categories
-    }
-
+    @EnvironmentObject private var ui: UIEvents
+    @EnvironmentObject private var services: ServicesContainer
+    @StateObject private var viewModel: CategoriesListViewModel
     @State private var searchText = ""
+    
+    init() {
+        _viewModel = StateObject(
+            wrappedValue: CategoriesListViewModel()
+        )
+    }
 
     private var filtered: [Category] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else {
-            return categories
+            return viewModel.categories
         }
-        return categories.filter { $0.name.fuzzyContains(query) }
+        return viewModel.categories.filter { $0.name.fuzzyContains(query) }
     }
-
+    
     var body: some View {
         List {
             Section(header: Text("СТАТЬИ")
@@ -52,23 +55,21 @@ struct CategoriesListView: View {
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "Поиск") /// Не Search, потому что у меня русское приложение!🙃
         .autocorrectionDisabled(false)
+        .withLoadAndAlerts()
+        .onAppear {
+            Task {
+                await ui.run {
+                    try await viewModel.reload()
+                }
+            }
+        }
+
     }
 }
 
 #Preview {
-    let sampleCategories: [Category] = [
-        Category(id: 1, name: "Аренда квартиры",   emoji: "🏠", isIncome: false),
-        Category(id: 2, name: "Одежда",            emoji: "👔", isIncome: false),
-        Category(id: 3, name: "На собачку",        emoji: "🐕", isIncome: false),
-        Category(id: 4, name: "Ремонт квартиры",   emoji: "🔨", isIncome: false),
-        Category(id: 5, name: "Продукты",          emoji: "🍬", isIncome: false),
-        Category(id: 6, name: "Спортзал",          emoji: "🏋️‍♀️", isIncome: false),
-        Category(id: 7, name: "Медицина",          emoji: "💊", isIncome: false),
-        Category(id: 8, name: "Аптека",            emoji: "💜", isIncome: false),
-        Category(id: 9, name: "Машина",            emoji: "🚗", isIncome: false)
-    ]
-
     NavigationStack {
-        CategoriesListView(categories: sampleCategories)
+        CategoriesListView()
+        .environmentObject(UIEvents())
     }
 }

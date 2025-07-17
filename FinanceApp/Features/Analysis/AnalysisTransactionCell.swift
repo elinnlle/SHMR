@@ -81,6 +81,17 @@ final class AnalysisTransactionCell: UITableViewCell {
         s.translatesAutoresizingMaskIntoConstraints = false
         return s
     }()
+    
+    // MARK: Data
+    private let catsService: CategoriesServiceProtocol = CategoriesService()
+    private var currentCategoryId: Int?
+    private var category: Category? {
+        didSet {
+            // Обновляем UI, когда категория загрузится
+            emojiLabel.text = String(category?.emoji ?? "💸")
+            titleLabel.text = category?.name ?? "Категория"
+        }
+    }
 
     // MARK: Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -91,6 +102,16 @@ final class AnalysisTransactionCell: UITableViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // сброс перед переиспользованием
+        currentCategoryId = nil
+        category = nil
+        commentLabel.text = nil
+        percentageLabel.text = nil
+        amountLabel.text = nil
     }
 
     // MARK: Layout
@@ -132,11 +153,24 @@ final class AnalysisTransactionCell: UITableViewCell {
 
     /// Передаём транзакцию и процент её от общей суммы
     func configure(with tx: Transaction, percentage: Int) {
-        // иконка
-        emojiLabel.text = "💸"
-
-        // заголовок + комментарий
-        titleLabel.text = "Категория #\(tx.categoryId)"
+        if currentCategoryId != tx.categoryId {
+            currentCategoryId = tx.categoryId
+            Task {
+                do {
+                    let cats = try await catsService.categories()
+                    if let cat = cats.first(where: { $0.id == tx.categoryId }) {
+                        DispatchQueue.main.async {
+                            self.category = cat
+                        }
+                    }
+                } catch {
+                    emojiLabel.text = "💸"
+                    titleLabel.text = "Категория #\(tx.categoryId)"
+                }
+            }
+        }
+        
+        // комментарий
         commentLabel.text = tx.comment
         commentLabel.isHidden = (tx.comment ?? "").isEmpty
 

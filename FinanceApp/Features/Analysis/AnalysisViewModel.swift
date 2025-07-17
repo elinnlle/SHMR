@@ -17,35 +17,59 @@ final class AnalysisViewModel {
     @Published private(set) var total:              Decimal       = .zero
 
     // MARK: Private
-    private var service: TransactionsServiceProtocol = TransactionsServiceMock.shared
+    private var service: TransactionsServiceProtocol = TransactionsService()
+    private let categoriesService: CategoriesServiceProtocol = CategoriesService()
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: Init
-    init(service: TransactionsServiceProtocol = TransactionsServiceMock.shared) {
+    init(service: TransactionsServiceProtocol = TransactionsService()) {
         self.service = service
     }
-
+    
     // MARK: Public
+    func reload(
+        direction: Direction,
+        start: Date,
+        end: Date,
+        sort: SortOption,
+        accountId: Int
+    ) async throws {
+        do {
+            let all        = try await service.transactions(for: accountId, from: start, to: end)
+            let categories = try await categoriesService.categories()
+            let catMap     = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
+                
+            let filtered = all.filter { tx in
+                guard let cat = catMap[tx.categoryId] else { return false }
+                return cat.isIncome == (direction == .income)
+            }
+            let sum = filtered.reduce(.zero) { $0 + $1.amount }
+                
+            await MainActor.run {
+                self.transactions = filtered
+                self.total        = sum
+                self.applySort(option: sort)
+            }
+        } catch {
+            print("Analysis load error:", error)
+        }
+    }
+    
     func load(
         direction: Direction,
         start: Date,
         end: Date,
-        sort: SortOption
+        sort: SortOption,
+        accountId: Int
     ) {
         Task {
-            do {
-                let all = try await service.transactions(for: 1, from: start, to: end)
-                let filtered = all.filter { $0.deducedDirection == direction }
-                let sum      = filtered.reduce(.zero) { $0 + $1.amount }
-
-                await MainActor.run {
-                    self.transactions = filtered
-                    self.total        = sum
-                    self.applySort(option: sort)
-                }
-            } catch {
-                print("Analysis load error:", error)
-            }
+            try? await reload(
+                direction: direction,
+                start:     start,
+                end:       end,
+                sort:      sort,
+                accountId: accountId
+            )
         }
     }
 

@@ -8,12 +8,24 @@
 import SwiftUI
 
 struct InvoiceView: View {
-    @StateObject private var viewModel = InvoiceViewModel()
-    @State private var showCurrencySheet = false
+    @EnvironmentObject private var ui: UIEvents
+    @EnvironmentObject private var services: ServicesContainer
 
+    let accountId: Int
+    @StateObject private var viewModel: InvoiceViewModel
+    
+    @State private var showCurrencySheet = false
+    
     // Высоты строк в CurrencyPickerCard
     private let headerHeight: CGFloat = 44
-    private let rowHeight: CGFloat = 56
+    private let rowHeight:    CGFloat = 56
+    
+    init(accountId: Int) {
+        self.accountId = accountId
+        _viewModel = StateObject(
+            wrappedValue: InvoiceViewModel(accountId: accountId)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -47,7 +59,19 @@ struct InvoiceView: View {
                     .foregroundColor(Color("PurpleAccent"))
                 }
             }
-            .refreshable { await viewModel.refresh() }
+            .refreshable {
+                await ui.run {
+                    try await viewModel.refresh()
+                }
+            }
+            .withLoadAndAlerts()
+            .onAppear {
+                Task {
+                    await ui.run {
+                        try await viewModel.refresh()
+                    }
+                }
+            }
             .accentColor(Color("PurpleAccent"))
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .overlay(shakeDetectorOverlay)
@@ -146,10 +170,8 @@ struct InvoiceView: View {
                         currencies: Currency.all,
                         current: viewModel.currency
                     ) { selected in
+                        viewModel.currency = selected
                         withAnimation { showCurrencySheet = false }
-                        if selected != viewModel.currency {
-                            viewModel.selectCurrency(selected)
-                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, bottomInset + 25)
@@ -168,8 +190,4 @@ struct InvoiceView: View {
             to: nil, from: nil, for: nil
         )
     }
-}
-
-#Preview {
-    NavigationStack { InvoiceView() }
 }
