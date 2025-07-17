@@ -263,6 +263,10 @@ struct HistoryView: View {
                 endButtonFrame = frame
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: UIApplication.shared.bottomSafeAreaInset)
+        }
     }
 
     // Формат даты и времени

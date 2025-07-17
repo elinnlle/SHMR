@@ -78,6 +78,10 @@ struct InvoiceView: View {
             .overlay(currencyPickerOverlay)
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showCurrencySheet)
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: UIApplication.shared.bottomSafeAreaInset)
+        }
     }
 
     @ViewBuilder

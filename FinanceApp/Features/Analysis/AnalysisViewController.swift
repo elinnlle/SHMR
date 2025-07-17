@@ -133,6 +133,7 @@ final class AnalysisViewController: UIViewController {
         frame.size.height = fittingSize.height
         header.frame = frame
         tableView.tableHeaderView = header
+        additionalSafeAreaInsets.bottom = UIApplication.shared.bottomSafeAreaInset
     }
 
     // MARK: Setup Views

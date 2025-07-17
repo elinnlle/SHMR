@@ -63,7 +63,10 @@ struct CategoriesListView: View {
                 }
             }
         }
-
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: UIApplication.shared.bottomSafeAreaInset)
+        }
     }
 }
 

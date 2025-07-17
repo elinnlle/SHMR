@@ -63,7 +63,7 @@ struct TransactionsListView: View {
                     .frame(width: 56, height: 56)
             }
                 .padding(.trailing, 16)
-                .padding(.bottom, 86),
+                .padding(.bottom, 46),
             alignment: .bottomTrailing
         )
         .sheet(item: $formMode,
@@ -90,6 +90,10 @@ struct TransactionsListView: View {
                     try await viewModel.reload(direction: direction, accountId: accountId)
                 }
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: UIApplication.shared.bottomSafeAreaInset)
         }
     }
 }
