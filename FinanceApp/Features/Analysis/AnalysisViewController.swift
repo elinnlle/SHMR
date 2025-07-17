@@ -298,9 +298,10 @@ extension AnalysisViewController: UITableViewDataSource {
 
             // считаем процент
             let pct: Int
-            if viewModel.total > 0 {
-                let ratio = (tx.amount as NSDecimalNumber).doubleValue
-                          / (viewModel.total as NSDecimalNumber).doubleValue
+            let totalMag = (viewModel.total as NSDecimalNumber).doubleValue.magnitude
+            if totalMag != 0 {
+                let amtMag = (tx.amount as NSDecimalNumber).doubleValue.magnitude
+                let ratio  = amtMag / totalMag
                 pct = Int((ratio * 100).rounded())
             } else {
                 pct = 0
