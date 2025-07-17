@@ -45,14 +45,7 @@ final class HistoryViewModel: ObservableObject {
 
     /// Сортировка по выбранному опциону
     func applySort(option: SortOption) {
-        switch option {
-        case .date:
-            sortedTransactions = transactions
-                .sorted { $0.transactionDate > $1.transactionDate }
-        case .amount:
-            sortedTransactions = transactions
-                .sorted { $0.amount > $1.amount }
-        }
+        sortedTransactions = transactions.sorted(by: option)
     }
 
     /// Форматирование общей суммы

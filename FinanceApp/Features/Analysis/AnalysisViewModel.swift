@@ -50,14 +50,7 @@ final class AnalysisViewModel {
     }
 
     func applySort(option: SortOption) {
-        switch option {
-        case .date:
-            sortedTransactions = transactions
-                .sorted { $0.transactionDate > $1.transactionDate }
-        case .amount:
-            sortedTransactions = transactions
-                .sorted { $0.amount > $1.amount }
-        }
+        sortedTransactions = transactions.sorted(by: option)
     }
 
     var totalFormatted: String {
@@ -67,15 +60,5 @@ final class AnalysisViewModel {
         nf.currencySymbol = "₽"
         let absTotal = total < 0 ? -total : total
         return nf.string(for: absTotal) ?? "\(absTotal) ₽"
-    }
-
-    enum SortOption: Int, CaseIterable {
-        case date, amount
-        var title: String {
-            switch self {
-            case .date:   return "По дате"
-            case .amount: return "По сумме"
-            }
-        }
     }
 }

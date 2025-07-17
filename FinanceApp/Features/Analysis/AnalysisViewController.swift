@@ -27,49 +27,11 @@ final class AnalysisViewController: UIViewController {
 
     private var startDate: Date = Date().monthAgo
     private var endDate:   Date = Date()
-    private var sortOption: AnalysisViewModel.SortOption = .date
+    private var sortOption: SortOption = .date
     
     private var currentTransactions: [Transaction] {
-            if !viewModel.sortedTransactions.isEmpty {
-                return viewModel.sortedTransactions
-            }
-            return placeholderTransactions.sorted { lhs, rhs in
-                switch sortOption {
-                case .date:
-                    return lhs.transactionDate > rhs.transactionDate
-                case .amount:
-                    return lhs.amount > rhs.amount
-                }
-            }
-        }
-
-    // Заглушки для операций, пока реальных нет
-    private let placeholderTransactions: [Transaction] = [
-        Transaction(
-            id: -1, accountId: 0, categoryId: 1,
-            amount: Decimal(1000),
-            comment: "Платёж два дня назад",
-            transactionDate: Calendar.current
-                .date(byAdding: .day, value: -2, to: Date())!,
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Transaction(
-            id: -2, accountId: 0, categoryId: 2,
-            amount: Decimal(2500),
-            comment: "Платёж сегодня",
-            transactionDate: Date(),
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Transaction(
-            id: -3, accountId: 0, categoryId: 3,
-            amount: Decimal(5000),
-            comment: "Крупный платёж 10 дней назад",
-            transactionDate: Calendar.current
-                .date(byAdding: .day, value: -10, to: Date())!,
-            createdAt: Date(), updatedAt: Date()
-        )
-    ]
-
+        return viewModel.sortedTransactions
+    }
 
     // MARK: Lifecycle
     override func viewDidLoad() {
@@ -213,11 +175,7 @@ final class AnalysisViewController: UIViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                self.tableView.reloadSections(IndexSet(integer: 1), with: .automatic)
-                self.tableView.reloadRows(
-                    at: [IndexPath(row: 2, section: 0)],
-                    with: .none
-                )
+                self.tableView.reloadData()
             }
             .store(in: &cancellables)
     }
@@ -235,19 +193,8 @@ final class AnalysisViewController: UIViewController {
 
 // MARK: — UITableViewDataSource
 extension AnalysisViewController: UITableViewDataSource {
-    // Транзакции, которые показываем: либо реальные, либо placeholder’ы, сразу отсортированные
     private var displayedTransactions: [Transaction] {
-        if !viewModel.sortedTransactions.isEmpty {
-            return viewModel.sortedTransactions
-        }
-        return placeholderTransactions.sorted { lhs, rhs in
-            switch sortOption {
-            case .date:
-                return lhs.transactionDate > rhs.transactionDate
-            case .amount:
-                return lhs.amount > rhs.amount
-            }
-        }
+        return viewModel.sortedTransactions
     }
 
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -358,7 +305,7 @@ extension AnalysisViewController: UITableViewDataSource {
         let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
         cell.selectionStyle = .none
 
-        let items = AnalysisViewModel.SortOption.allCases.map { $0.title }
+        let items = SortOption.allCases.map { $0.title }
         let segmented = UISegmentedControl(items: items)
         segmented.selectedSegmentIndex = sortOption.rawValue
         segmented.addTarget(self, action: #selector(sortChanged(_:)), for: .valueChanged)
@@ -472,7 +419,7 @@ extension AnalysisViewController: UITableViewDelegate {
     }
 
     @objc private func sortChanged(_ sender: UISegmentedControl) {
-        let opt = AnalysisViewModel.SortOption(rawValue: sender.selectedSegmentIndex)!
+        let opt = SortOption(rawValue: sender.selectedSegmentIndex)!
         sortOption = opt
         viewModel.applySort(option: opt)
     }
