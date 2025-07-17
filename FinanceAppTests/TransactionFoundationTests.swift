@@ -18,8 +18,8 @@ final class TransactionFoundationTests: XCTestCase {
             accountId: 202,
             categoryId: 303,
             amount: Decimal(string: "123.45")!,
-            comment: "Test comment",
             transactionDate: Date(timeIntervalSince1970: 1_600_000_000),
+            comment: "Test comment",
             createdAt:       Date(timeIntervalSince1970: 1_600_000_100),
             updatedAt:       Date(timeIntervalSince1970: 1_600_000_200)
         )
@@ -57,8 +57,8 @@ final class TransactionFoundationTests: XCTestCase {
             accountId: 666,
             categoryId: 777,
             amount: Decimal(string: "999.99")!,
-            comment: nil,
             transactionDate: Date(timeIntervalSince1970: 1_700_000_000),
+            comment: nil,
             createdAt:       Date(timeIntervalSince1970: 1_700_000_100),
             updatedAt:       Date(timeIntervalSince1970: 1_700_000_200)
         )

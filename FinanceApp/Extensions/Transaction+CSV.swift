@@ -87,8 +87,8 @@ extension Transaction {
             accountId: accountId,
             categoryId: categoryId,
             amount: amount,
-            comment: comment,
             transactionDate: txDate,
+            comment: comment,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

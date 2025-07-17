@@ -12,8 +12,8 @@ struct Transaction: Identifiable, Hashable, Codable {
     let accountId: Int
     let categoryId: Int
     let amount: Decimal
-    let comment: String?
     let transactionDate: Date
+    let comment: String?
     let createdAt: Date
     let updatedAt: Date
 
@@ -27,8 +27,8 @@ struct Transaction: Identifiable, Hashable, Codable {
         accountId: Int,
         categoryId: Int,
         amount: Decimal,
-        comment: String?,
         transactionDate: Date,
+        comment: String?,
         createdAt: Date,
         updatedAt: Date
     ) {
@@ -36,8 +36,8 @@ struct Transaction: Identifiable, Hashable, Codable {
         self.accountId = accountId
         self.categoryId = categoryId
         self.amount = amount
-        self.comment = comment
         self.transactionDate = transactionDate
+        self.comment = comment
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
