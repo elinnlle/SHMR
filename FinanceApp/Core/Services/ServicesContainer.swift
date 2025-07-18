@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 final class ServicesContainer: ObservableObject {
     let transactions = TransactionsService()
     let accounts     = BankAccountsService()

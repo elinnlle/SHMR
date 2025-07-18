@@ -14,6 +14,15 @@ struct BankAccount: Identifiable, Codable {
     var currency: String
     let createdAt: Date
     let updatedAt: Date
+    
+    init(id: Int, name: String, balance: Decimal, currency: String, createdAt: Date, updatedAt: Date) {
+        self.id = id
+        self.name = name
+        self.balance = balance
+        self.currency = currency
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, balance, currency, createdAt, updatedAt

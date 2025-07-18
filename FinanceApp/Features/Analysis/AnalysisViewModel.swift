@@ -17,13 +17,16 @@ final class AnalysisViewModel {
     @Published private(set) var total:              Decimal       = .zero
 
     // MARK: Private
-    private var service: TransactionsServiceProtocol = TransactionsService()
-    private let categoriesService: CategoriesServiceProtocol = CategoriesService()
-    private var cancellables = Set<AnyCancellable>()
+    private var service: TransactionsServiceProtocol
+    private let categoriesService: CategoriesServiceProtocol
 
     // MARK: Init
-    init(service: TransactionsServiceProtocol = TransactionsService()) {
-        self.service = service
+    init(
+        service: TransactionsServiceProtocol? = nil,
+        categoriesService: CategoriesServiceProtocol = CategoriesService()
+    ) {
+        self.service = service ?? TransactionsService()
+        self.categoriesService = categoriesService
     }
     
     // MARK: Public
