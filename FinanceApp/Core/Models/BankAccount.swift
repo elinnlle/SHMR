@@ -64,4 +64,17 @@ struct BankAccount: Identifiable, Codable {
         createdAt = created
         updatedAt = updated
     }
+    
+    func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(id,       forKey: .id)
+            try c.encode(name,     forKey: .name)
+            // кодируем balance строкой
+            try c.encode(balance.description, forKey: .balance)
+            try c.encode(currency, forKey: .currency)
+            let iso = ISO8601DateFormatter()
+            iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            try c.encode(iso.string(from: createdAt), forKey: .createdAt)
+            try c.encode(iso.string(from: updatedAt), forKey: .updatedAt)
+        }
 }

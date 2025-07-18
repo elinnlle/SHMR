@@ -26,16 +26,18 @@ final class InvoiceViewModel: ObservableObject {
     private var currentAccount: BankAccount?
     private let accountId: Int
 
-    init(service: BankAccountsServiceProtocol = BankAccountsService(),
-         accountId: Int
+    init(
+        service: BankAccountsServiceProtocol? = nil,
+        accountId: Int
     ) {
-        self.service = service
+        // Здесь мы уже на MainActor
+        self.service   = service ?? BankAccountsService()
         self.accountId = accountId
 
         // Сразу в фоне подгружаем account
         Task {
             do {
-                let acc = try await service.account()
+                let acc = try await self.service.account()
                 await MainActor.run {
                     self.currentAccount = acc
                     self.balance = acc.balance

@@ -40,8 +40,9 @@ final class SwiftDataBankAccountsStore: BankAccountsStore {
         guard let ent = ents.first else {
             throw PersistenceError.notFound(id: account.id)
         }
-        ent.name    = account.name
-        ent.balance = account.balance
+        ent.name     = account.name
+        ent.balance  = account.balance
+        ent.currency = account.currency
         try context.save()
     }
 
