@@ -19,7 +19,15 @@ final class NetworkClient {
     private let decoder: JSONDecoder
 
     init(
-        session: URLSession = .shared,
+        session: URLSession = {
+            // Настраиваем сессию, чтобы не ждать восстановления сети
+            let config = URLSessionConfiguration.default
+            config.waitsForConnectivity = false
+            config.timeoutIntervalForRequest = 5 // сек
+            config.timeoutIntervalForResource = 5
+            return URLSession(configuration: config)
+        }(),
+
         encoder: JSONEncoder = .init(),
         decoder: JSONDecoder = .init()
     ) {
