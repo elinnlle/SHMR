@@ -13,8 +13,8 @@ final class CategoriesListViewModel: ObservableObject {
 
     private let service: CategoriesServiceProtocol
 
-    init(service: CategoriesServiceProtocol = CategoriesService()) {
-        self.service = service
+    init(service: CategoriesServiceProtocol? = nil) {
+        self.service = service ?? CategoriesService()
     }
 
     /// Загружает список категорий с сервера

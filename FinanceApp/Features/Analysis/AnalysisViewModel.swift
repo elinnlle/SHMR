@@ -22,11 +22,11 @@ final class AnalysisViewModel {
 
     // MARK: Init
     init(
-        service: TransactionsServiceProtocol? = nil,
-        categoriesService: CategoriesServiceProtocol = CategoriesService()
+        service: TransactionsServiceProtocol?            = nil,
+        categoriesService: CategoriesServiceProtocol?    = nil
     ) {
-        self.service = service ?? TransactionsService()
-        self.categoriesService = categoriesService
+        self.service           = service           ?? TransactionsService()
+        self.categoriesService = categoriesService ?? CategoriesService()
     }
     
     // MARK: Public
