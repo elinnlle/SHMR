@@ -22,6 +22,7 @@ final class AnalysisViewController: UIViewController {
     // MARK: State
     private let viewModel = AnalysisViewModel()
     private var cancellables = Set<AnyCancellable>()
+    private let uiEvents = UIEvents()
     
     private var showStartPicker = false
     private var showEndPicker   = false
@@ -398,7 +399,10 @@ extension AnalysisViewController: UITableViewDelegate {
                 .onDisappear {
                     self.loadData()
                 }
-            let host = UIHostingController(rootView: form)
+            let host = UIHostingController(
+                rootView: form
+                    .environmentObject(self.uiEvents)
+            )
             host.modalPresentationStyle = .automatic
             present(host, animated: true)
 
