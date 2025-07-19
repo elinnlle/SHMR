@@ -12,4 +12,5 @@ final class ServicesContainer: ObservableObject {
     let transactions = TransactionsService()
     let accounts     = BankAccountsService()
     let categories   = CategoriesService()
+    let network = NetworkStatusService()
 }

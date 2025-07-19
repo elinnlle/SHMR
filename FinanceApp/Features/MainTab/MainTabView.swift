@@ -40,12 +40,23 @@ struct MainTabView: View {
     @State private var invoicePath    = NavigationPath()
     @State private var categoriesPath = NavigationPath()
     @State private var settingsPath   = NavigationPath()
+    
+    @EnvironmentObject private var services: ServicesContainer
 
     private let accountId: Int = 103
 
     var body: some View {
-        ZStack {
+        ZStack (alignment: .bottom) {
             content
+            
+            
+            if !services.network.isOnline {
+                OfflineBanner()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut, value: services.network.isOnline)
+                    .padding(.bottom, 54)
+                }
+            
             tabBar
         }
     }
