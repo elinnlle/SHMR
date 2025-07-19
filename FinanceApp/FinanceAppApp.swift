@@ -16,6 +16,9 @@ struct FinanceAppApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(uiEvents)
+                .task {
+                    try? await DataMigrationManager.migrateIfNeeded()
+                }
         }
     }
 }
