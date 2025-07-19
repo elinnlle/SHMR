@@ -41,7 +41,7 @@ struct MainTabView: View {
     @State private var categoriesPath = NavigationPath()
     @State private var settingsPath   = NavigationPath()
     
-    @EnvironmentObject private var services: ServicesContainer
+    @EnvironmentObject private var network: NetworkStatusService
 
     private let accountId: Int = 103
 
@@ -50,10 +50,10 @@ struct MainTabView: View {
             content
             
             
-            if !services.network.isOnline {
+            if !network.isOnline {
                 OfflineBanner()
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .animation(.easeInOut, value: services.network.isOnline)
+                    .animation(.easeInOut, value: network.isOnline)
                     .padding(.bottom, 54)
                 }
             
