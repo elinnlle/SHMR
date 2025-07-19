@@ -8,11 +8,15 @@
 import UIKit
 import Combine
 import SwiftUI  // для DateTimePickerPopup, потому что он уже был реализоан
+import PieChart
 
 final class AnalysisViewController: UIViewController {
     // MARK: Public
     var direction: Direction = .outcome
     var accountId: Int = 0
+    
+    // MARK: Pie-chart
+    private let chart = PieChartView()
     
     // MARK: UI
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -80,6 +84,11 @@ final class AnalysisViewController: UIViewController {
         backButton.sizeToFit()
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton)
 
+        view.addSubview(tableView)
+        tableView.delegate   = self
+        tableView.dataSource = self
+
+        setupTableView()
         setupTableHeader()
         setupTableView()
         setupOverlay()
@@ -216,6 +225,50 @@ final class AnalysisViewController: UIViewController {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.tableView.reloadData()
+
+                // Получаем текущие транзакции
+                let transactions = self.currentTransactions
+
+                // Считаем общую сумму
+                let totalSumDecimal: Decimal = transactions.reduce(.zero) { $0 + $1.amount }
+
+                // Если нет транзакций — обнуляем график и выходим
+                guard totalSumDecimal != .zero else {
+                    self.chart.entities = []
+                    print("No transactions → entities = []")
+                    return
+                }
+
+                // Группируем по категориям и считаем сумму по каждой категории
+                let sumsByCategory: [Int: Decimal] = Dictionary(
+                    grouping: transactions,
+                    by: { $0.categoryId }
+                ).mapValues { txs in
+                    txs.reduce(.zero) { $0 + $1.amount }
+                }
+
+                let viewModel = self.viewModel
+                
+                // Формируем массив PieChartEntity с процентами
+                let entities: [PieChartEntity] = sumsByCategory
+                    .map { categoryId, categorySum in
+                        // percent = (sum / totalSum) * 100
+                        let percentDecimal = (categorySum / totalSumDecimal) * Decimal(100)
+                        let percentDouble  = NSDecimalNumber(decimal: percentDecimal).doubleValue
+                        
+                        return PieChartEntity(
+                            value: Decimal(percentDouble),
+                            label: viewModel.categoryName(for: categoryId)
+                        )
+                    }
+                    // Сортируем по убыванию доли
+                    .sorted { $0.value > $1.value }
+
+                // Передаём во вью
+                self.chart.entities = entities
+
+                // И обновляем диаграмму
+                self.chart.setEntities(entities, animated: true)
             }
             .store(in: &cancellables)
     }
@@ -410,6 +463,34 @@ extension AnalysisViewController: UITableViewDelegate {
             break
         }
     }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+            switch section {
+            case 0:
+                return tableView.bounds.width * 0.5
+            default:
+                return 0.1
+            }
+        }
+
+        // Визуальный футер (в него встанет chart)
+        func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+            guard section == 0 else { return nil }
+
+            let container = UIView()
+            container.backgroundColor = .clear
+
+            container.addSubview(chart)
+            chart.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                chart.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
+                chart.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+                chart.widthAnchor.constraint(equalToConstant: 180),
+                chart.heightAnchor.constraint(equalToConstant: 180),
+            ])
+
+            return container
+        }
 
     private enum PickerKind { case start, end }
 

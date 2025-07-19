@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		242D29042E2C0FB200009E44 /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = 242D29032E2C0FB200009E44 /* PieChart */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		24F240542DF9DBEF00B1B6D2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				242D29042E2C0FB200009E44 /* PieChart in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,6 +122,7 @@
 			);
 			name = FinanceApp;
 			packageProductDependencies = (
+				242D29032E2C0FB200009E44 /* PieChart */,
 			);
 			productName = FinanceApp;
 			productReference = 24C9B8722E0D7D1E005E3585 /* FinanceApp.app */;
@@ -201,6 +207,9 @@
 			);
 			mainGroup = 24F2403A2DF9DBED00B1B6D2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				242D29022E2C0FB200009E44 /* XCLocalSwiftPackageReference "Utilities" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 24F2403A2DF9DBED00B1B6D2;
 			projectDirPath = "";
@@ -566,6 +575,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		242D29022E2C0FB200009E44 /* XCLocalSwiftPackageReference "Utilities" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Utilities;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		242D29032E2C0FB200009E44 /* PieChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PieChart;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 24F2403B2DF9DBED00B1B6D2 /* Project object */;
 }

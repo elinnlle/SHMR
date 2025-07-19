@@ -7,7 +7,6 @@
 
 import UIKit
 
-/// Кастомный UIView, рисующий круговую диаграмму + легенду внутри
 @IBDesignable
 public final class PieChartView: UIView {
 
@@ -18,11 +17,15 @@ public final class PieChartView: UIView {
 
     // MARK: –- Константы
     private static let segmentColors: [UIColor] = [
-        .systemGreen, .systemYellow, .systemOrange,
-        .systemBlue,  .systemTeal,   .systemPink     // до 6 сегментов
+        UIColor(red:   0x2A/255.0, green: 0xE8/255.0, blue: 0x81/255.0, alpha: 1), // 2AE881
+        UIColor(red:   0xFC/255.0, green: 0xE3/255.0, blue: 0x00/255.0, alpha: 1), // FCE300
+        UIColor(red:   0xFF/255.0, green: 0x5F/255.0, blue: 0x00/255.0, alpha: 1), // FF5F00
+        UIColor(red:   0xFF/255.0, green: 0x37/255.0, blue: 0xBC/255.0, alpha: 1), // FF37BC
+        UIColor(red:   0x6F/255.0, green: 0x5D/255.0, blue: 0xB7/255.0, alpha: 1), // 6F5DB7
+        UIColor(red:   0x00/255.0, green: 0xBB/255.0, blue: 0xFF/255.0, alpha: 1), // 00BBFF
     ]
-    private let lineWidthRatio: CGFloat = 0.12       // толщина
-    private let font = UIFont.systemFont(ofSize: 11, weight: .regular)
+    private let lineWidthRatio: CGFloat = 0.12  // толщина
+    private let font = UIFont.systemFont(ofSize: 10, weight: .regular)
 
     // MARK: –- Жизненный цикл
     public override init(frame: CGRect) {
@@ -39,7 +42,7 @@ public final class PieChartView: UIView {
         let center = CGPoint(x: rect.midX, y: rect.midY)
         let lineWidth = radius * lineWidthRatio
 
-        // Подготовка данных: первые 5 элементов + «Остальные»
+        // Первые 5 элементов + «Остальные»
         let top5 = entities.prefix(5)
         let othersValue = entities.dropFirst(5).reduce(Decimal(0)) { $0 + $1.value }
         var drawingSet = Array(top5)
@@ -52,7 +55,7 @@ public final class PieChartView: UIView {
         guard total > 0 else { return }
 
         // Рисуем сегменты
-        var startAngle = -CGFloat.pi / 2      // 12 часов
+        var startAngle = -CGFloat.pi / 2  // 12 часов
         for (index, entity) in drawingSet.enumerated() {
             let fraction = CGFloat((entity.value / total as NSDecimalNumber).doubleValue)
             let endAngle = startAngle + fraction * 2 * .pi
