@@ -26,19 +26,25 @@ final class TransactionsService: TransactionsServiceProtocol {
         return f
     }()
 
+    
     private let store: TransactionsStore
     private let backup: BackupStore
+    private let bankService: BankAccountsServiceProtocol
+    
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     init(
         client: NetworkClient = .init(),
         store: TransactionsStore? = nil,
-        backup: BackupStore? = nil
+        backup: BackupStore? = nil,
+        bankService: BankAccountsServiceProtocol? = nil
     ) {
         self.client = client
         self.store = store ?? SwiftDataTransactionsStore()
         self.backup = backup ?? SwiftDataBackupStore()
+        self.bankService = bankService ?? BankAccountsService()
+        
     }
 
     private func upsert(_ tx: Transaction) throws {
@@ -203,6 +209,13 @@ final class TransactionsService: TransactionsServiceProtocol {
             } catch {
                 print("❌ Failed to save backup item:", error)
             }
+            do {
+                var account = try await bankService.account()
+                account.balance += tx.amount
+                _ = try await bankService.update(account: account)
+            } catch {
+                print("❌ Failed to save account backup:", error)
+            }
         }
         await uploadBackup()
     }
@@ -237,20 +250,47 @@ final class TransactionsService: TransactionsServiceProtocol {
             } catch {
                 print("❌ Failed to save backup item:", error)
             }
+            do {
+                var account = try await bankService.account()
+                account.balance += tx.amount
+                _ = try await bankService.update(account: account)
+            } catch {
+                print("❌ Failed to save account backup:", error)
+            }
         }
     }
 
     func delete(id: Int) async throws {
+        // Синхронизируем старые бэкапы
         await uploadBackup()
 
-        // Сначала удаляем локально
+        // Получаем транзакцию, чтобы знать сумму
+        let txToDelete: Transaction?
+        do {
+            txToDelete = try store.transaction(id: id)
+        } catch {
+            txToDelete = nil
+            print("Failed to fetch tx(\(id)) before delete:", error)
+        }
+
+        // 3. Удаляем саму транзакцию локально
         do {
             try store.delete(id: id)
         } catch {
-            print("Local delete error for tx(\(id)): \(error)")
+            print("Local delete error for tx(\(id)):", error)
         }
 
-        // Пытаемся удалить на сервере
+        // Откатываем баланс
+        if let tx = txToDelete {
+            do {
+                var account = try await bankService.account()
+                account.balance -= tx.amount
+                _ = try await bankService.update(account: account)
+            } catch {
+                print("Error updating account after tx delete:", error)
+            }
+        }
+
         let path = "transactions/\(id)"
         print("DELETE https://shmr-finance.ru/api/v1/\(path)")
         do {
@@ -260,7 +300,8 @@ final class TransactionsService: TransactionsServiceProtocol {
                 body: Optional<EmptyBody>.none
             )
         } catch {
-            print("Backup delete queued for tx(\(id)): \(error)")
+            print("Backup delete queued for tx(\(id)):", error)
         }
     }
+
 }

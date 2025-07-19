@@ -82,6 +82,20 @@ final class BankAccountsService: BankAccountsServiceProtocol {
             print("backup.items() failed:", error)
         }
 
+        // Возвращаем свежий баланс из бэкап, если есть
+        let pendingAccountUpdates = (try? backup.items())?.contains {
+                $0.action == .update
+            } ?? false
+
+            if pendingAccountUpdates {
+                let all = try store.all()
+                if let local = all.first {
+                    return local
+                } else {
+                    throw NetworkError.noData
+                }
+            }
+        
         // Пытаемся получить свежий аккаунт
         do {
             let list: [BankAccount] = try await client.request(
