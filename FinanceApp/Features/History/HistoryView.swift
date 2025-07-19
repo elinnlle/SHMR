@@ -23,6 +23,7 @@ private struct EndButtonFrameKey: PreferenceKey {
 
 struct HistoryView: View {
     let direction: Direction
+    let accountId: Int
 
     @State private var startDate: Date = Date().monthAgo
     @State private var endDate:   Date = Date()
@@ -35,7 +36,10 @@ struct HistoryView: View {
     @State private var startButtonFrame: CGRect = .zero
     @State private var endButtonFrame: CGRect   = .zero
 
+    @EnvironmentObject private var ui: UIEvents
     @StateObject private var viewModel = HistoryViewModel()
+    
+    @State private var editingTx: Transaction?
 
     var body: some View {
         ZStack {
@@ -114,24 +118,75 @@ struct HistoryView: View {
                     LazyVStack {
                         ForEach(viewModel.sortedTransactions) { tx in
                             TransactionRowView(transaction: tx)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    editingTx = tx
+                                }
                         }
                     }
                 }
             }
             .listStyle(.insetGrouped)
             .listSectionSpacing(.compact)
-            .onAppear { reload() }
+            .onAppear {
+                Task {
+                    await ui.run {
+                        try await viewModel.reload(
+                            direction: direction,
+                            start:     startDate.startOfDay,
+                            end:       endDate.endOfDay,
+                            sort:      sortOption,
+                            accountId: accountId
+                        )
+                    }
+                }
+            }
             .onChange(of: startDate) { _, new in
                 if new > endDate { endDate = new }
-                reload()
+                Task {
+                    await ui.run {
+                        try await viewModel.reload(
+                            direction: direction,
+                            start:     startDate.startOfDay,
+                            end:       endDate.endOfDay,
+                            sort:      sortOption,
+                            accountId: accountId
+                        )
+                    }
+                }
             }
             .onChange(of: endDate) { _, new in
                 if new < startDate { startDate = new }
-                reload()
+                Task {
+                    await ui.run {
+                        try await viewModel.reload(
+                            direction: direction,
+                            start:     startDate.startOfDay,
+                            end:       endDate.endOfDay,
+                            sort:      sortOption,
+                            accountId: accountId
+                        )
+                    }
+                }
             }
-            .onChange(of: sortOption) { _, _ in
-                viewModel.applySort(option: sortOption)
+            .onChange(of: sortOption) { _, newSort in
+                viewModel.applySort(option: newSort)
             }
+            .sheet(item: $editingTx, onDismiss: {
+                viewModel.load(
+                    direction: direction,
+                    start:     startDate.startOfDay,
+                    end:       endDate.endOfDay,
+                    sort:      sortOption,
+                    accountId: accountId
+                )
+            }) { tx in
+                TransactionFormView(
+                    mode: .edit(tx),
+                    direction: direction
+                )
+            }
+            .withLoadAndAlerts()
             
             // Фон затемнения при показе попапа
             if showStartPicker || showEndPicker {
@@ -191,25 +246,27 @@ struct HistoryView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink {
-                    AnalysisViewControllerWrapper(direction: direction)
+                    AnalysisViewControllerWrapper(direction: direction, accountId: accountId)
                         .edgesIgnoringSafeArea(.all)
                 } label: {
                     Image("AnalysisIcon")
                 }
             }
         }
-        .onPreferenceChange(StartButtonFrameKey.self) { startButtonFrame = $0 }
-        .onPreferenceChange(EndButtonFrameKey.self)   { endButtonFrame   = $0 }
-    }
-
-
-    private func reload() {
-        viewModel.load(
-            direction: direction,
-            start: startDate.startOfDay,
-            end:   endDate.endOfDay,
-            sort:  sortOption
-        )
+        .onPreferenceChange(StartButtonFrameKey.self) { frame in
+            DispatchQueue.main.async {
+                startButtonFrame = frame
+            }
+        }
+        .onPreferenceChange(EndButtonFrameKey.self)   { frame in
+            DispatchQueue.main.async {
+                endButtonFrame = frame
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: UIApplication.shared.bottomSafeAreaInset)
+        }
     }
 
     // Формат даты и времени
@@ -224,6 +281,6 @@ struct HistoryView: View {
 
 #Preview {
     NavigationStack {
-        HistoryView(direction: .outcome)
+        HistoryView(direction: .outcome, accountId: 0)
     }
 }

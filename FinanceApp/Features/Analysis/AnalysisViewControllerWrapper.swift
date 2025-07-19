@@ -10,10 +10,12 @@ import UIKit
 
 struct AnalysisViewControllerWrapper: UIViewControllerRepresentable {
     let direction: Direction
+    let accountId: Int
 
     func makeUIViewController(context: Context) -> AnalysisViewController {
         let vc = AnalysisViewController()
         vc.direction = direction
+        vc.accountId = accountId
         return vc
     }
 

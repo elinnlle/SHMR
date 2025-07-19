@@ -12,7 +12,7 @@ struct TransactionRowView: View {
 
     // MARK: – Категория
     @State private var category: Category?
-    private let catsService: CategoriesServiceProtocol = CategoriesServiceMock()
+    private let catsService: CategoriesServiceProtocol = CategoriesService()
 
     private var categoryName: String { category?.name ?? "Категория" }
     private var categoryEmoji: String { String(category?.emoji ?? "💸") }
@@ -68,20 +68,4 @@ struct TransactionRowView: View {
             category = nil
         }
     }
-}
-
-#Preview {
-    let sample = Transaction(
-        id: 1,
-        accountId: 1,
-        categoryId: 2,
-        amount: Decimal(string: "1000.00")!,
-        comment: "Пример комментария",
-        transactionDate: Date(),
-        createdAt: Date(),
-        updatedAt: Date()
-    )
-    TransactionRowView(transaction: sample)
-        .previewLayout(.sizeThatFits)
-        .padding()
 }

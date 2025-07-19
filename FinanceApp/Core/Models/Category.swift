@@ -11,7 +11,7 @@ struct Category: Identifiable, Hashable, Codable {
     let id: Int
     let name: String
     let emoji: Character
-    private let isIncome: Bool
+    let isIncome: Bool
 
     var direction: Direction {
         isIncome ? .income : .outcome

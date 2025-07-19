@@ -12,64 +12,29 @@ import SwiftUI  // для DateTimePickerPopup, потому что он уже �
 final class AnalysisViewController: UIViewController {
     // MARK: Public
     var direction: Direction = .outcome
-
+    var accountId: Int = 0
+    
     // MARK: UI
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     private let overlayView = UIView()
     private var pickerHost: UIHostingController<DateTimePickerPopup>?
-
+    
     // MARK: State
     private let viewModel = AnalysisViewModel()
     private var cancellables = Set<AnyCancellable>()
-
+    
     private var showStartPicker = false
     private var showEndPicker   = false
-
+    
     private var startDate: Date = Date().monthAgo
     private var endDate:   Date = Date()
-    private var sortOption: AnalysisViewModel.SortOption = .date
+    private var sortOption: SortOption = .date
+    
+    private let spinner = UIActivityIndicatorView(style: .large)
     
     private var currentTransactions: [Transaction] {
-            if !viewModel.sortedTransactions.isEmpty {
-                return viewModel.sortedTransactions
-            }
-            return placeholderTransactions.sorted { lhs, rhs in
-                switch sortOption {
-                case .date:
-                    return lhs.transactionDate > rhs.transactionDate
-                case .amount:
-                    return lhs.amount > rhs.amount
-                }
-            }
-        }
-
-    // Заглушки для операций, пока реальных нет
-    private let placeholderTransactions: [Transaction] = [
-        Transaction(
-            id: -1, accountId: 0, categoryId: 1,
-            amount: Decimal(1000),
-            comment: "Платёж два дня назад",
-            transactionDate: Calendar.current
-                .date(byAdding: .day, value: -2, to: Date())!,
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Transaction(
-            id: -2, accountId: 0, categoryId: 2,
-            amount: Decimal(2500),
-            comment: "Платёж сегодня",
-            transactionDate: Date(),
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Transaction(
-            id: -3, accountId: 0, categoryId: 3,
-            amount: Decimal(5000),
-            comment: "Крупный платёж 10 дней назад",
-            transactionDate: Calendar.current
-                .date(byAdding: .day, value: -10, to: Date())!,
-            createdAt: Date(), updatedAt: Date()
-        )
-    ]
-
+        return viewModel.sortedTransactions
+    }
 
     // MARK: Lifecycle
     override func viewDidLoad() {
@@ -117,6 +82,7 @@ final class AnalysisViewController: UIViewController {
         setupTableHeader()
         setupTableView()
         setupOverlay()
+        setupSpinner()
         setupBindings()
         loadData()
     }
@@ -167,6 +133,7 @@ final class AnalysisViewController: UIViewController {
         frame.size.height = fittingSize.height
         header.frame = frame
         tableView.tableHeaderView = header
+        additionalSafeAreaInsets.bottom = UIApplication.shared.bottomSafeAreaInset
     }
 
     // MARK: Setup Views
@@ -207,47 +174,76 @@ final class AnalysisViewController: UIViewController {
         )
         overlayView.addGestureRecognizer(tap)
     }
+    
+    private func setupSpinner() {
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        view.addSubview(spinner)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    private func showLoading() {
+        DispatchQueue.main.async {
+            self.spinner.startAnimating()
+        }
+    }
+    
+    private func hideLoading() {
+        DispatchQueue.main.async {
+            self.spinner.stopAnimating()
+        }
+    }
+    
+    private func presentError(_ error: Error) {
+        let alert = UIAlertController(
+            title: "Ошибка",
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        DispatchQueue.main.async {
+            self.present(alert, animated: true)
+        }
+    }
 
     private func setupBindings() {
         viewModel.$sortedTransactions
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                self.tableView.reloadSections(IndexSet(integer: 1), with: .automatic)
-                self.tableView.reloadRows(
-                    at: [IndexPath(row: 2, section: 0)],
-                    with: .none
-                )
+                self.tableView.reloadData()
             }
             .store(in: &cancellables)
     }
 
     // MARK: Data
     private func loadData() {
-        viewModel.load(
-            direction: direction,
-            start:     startDate,
-            end:       endDate,
-            sort:      sortOption
-        )
+        Task {
+            showLoading()
+            do {
+                try await viewModel.reload(
+                    direction: direction,
+                    start:     startDate,
+                    end:       endDate,
+                    sort:      sortOption,
+                    accountId: accountId
+                )
+            } catch {
+                presentError(error)
+            }
+            hideLoading()
+        }
+        
     }
 }
 
 // MARK: — UITableViewDataSource
 extension AnalysisViewController: UITableViewDataSource {
-    // Транзакции, которые показываем: либо реальные, либо placeholder’ы, сразу отсортированные
     private var displayedTransactions: [Transaction] {
-        if !viewModel.sortedTransactions.isEmpty {
-            return viewModel.sortedTransactions
-        }
-        return placeholderTransactions.sorted { lhs, rhs in
-            switch sortOption {
-            case .date:
-                return lhs.transactionDate > rhs.transactionDate
-            case .amount:
-                return lhs.amount > rhs.amount
-            }
-        }
+        return viewModel.sortedTransactions
     }
 
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -298,9 +294,10 @@ extension AnalysisViewController: UITableViewDataSource {
 
             // считаем процент
             let pct: Int
-            if viewModel.total > 0 {
-                let ratio = (tx.amount as NSDecimalNumber).doubleValue
-                          / (viewModel.total as NSDecimalNumber).doubleValue
+            let totalMag = (viewModel.total as NSDecimalNumber).doubleValue.magnitude
+            if totalMag != 0 {
+                let amtMag = (tx.amount as NSDecimalNumber).doubleValue.magnitude
+                let ratio  = amtMag / totalMag
                 pct = Int((ratio * 100).rounded())
             } else {
                 pct = 0
@@ -357,7 +354,7 @@ extension AnalysisViewController: UITableViewDataSource {
         let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
         cell.selectionStyle = .none
 
-        let items = AnalysisViewModel.SortOption.allCases.map { $0.title }
+        let items = SortOption.allCases.map { $0.title }
         let segmented = UISegmentedControl(items: items)
         segmented.selectedSegmentIndex = sortOption.rawValue
         segmented.addTarget(self, action: #selector(sortChanged(_:)), for: .valueChanged)
@@ -381,13 +378,33 @@ extension AnalysisViewController: UITableViewDelegate {
         _ tableView: UITableView,
         didSelectRowAt indexPath: IndexPath
     ) {
-        guard indexPath.section == 0 else { return }
-        switch indexPath.row {
-        case 0: presentPicker(kind: .start)
-        case 1: presentPicker(kind: .end)
-        default: break
-        }
         tableView.deselectRow(at: indexPath, animated: true)
+
+        switch indexPath.section {
+        case 0:
+            // Секция "Дата начала/конца"
+            switch indexPath.row {
+            case 0:
+                presentPicker(kind: .start)
+            case 1:
+                presentPicker(kind: .end)
+            default:
+                break
+            }
+
+        case 1:
+            let tx = displayedTransactions[indexPath.row]
+            let form = TransactionFormView(mode: .edit(tx), direction: direction)
+                .onDisappear {
+                    self.loadData()
+                }
+            let host = UIHostingController(rootView: form)
+            host.modalPresentationStyle = .automatic
+            present(host, animated: true)
+
+        default:
+            break
+        }
     }
 
     private enum PickerKind { case start, end }
@@ -471,7 +488,7 @@ extension AnalysisViewController: UITableViewDelegate {
     }
 
     @objc private func sortChanged(_ sender: UISegmentedControl) {
-        let opt = AnalysisViewModel.SortOption(rawValue: sender.selectedSegmentIndex)!
+        let opt = SortOption(rawValue: sender.selectedSegmentIndex)!
         sortOption = opt
         viewModel.applySort(option: opt)
     }

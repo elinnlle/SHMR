@@ -41,8 +41,8 @@ extension Transaction {
             accountId: accId,
             categoryId: catId,
             amount: decAmount,
-            comment: comment,
             transactionDate: txDate,
+            comment: comment,
             createdAt: created,
             updatedAt: updated
         )
