@@ -209,13 +209,6 @@ final class TransactionsService: TransactionsServiceProtocol {
             } catch {
                 print("❌ Failed to save backup item:", error)
             }
-            do {
-                var account = try await bankService.account()
-                account.balance += tx.amount
-                _ = try await bankService.update(account: account)
-            } catch {
-                print("❌ Failed to save account backup:", error)
-            }
         }
         await uploadBackup()
     }
@@ -250,13 +243,6 @@ final class TransactionsService: TransactionsServiceProtocol {
             } catch {
                 print("❌ Failed to save backup item:", error)
             }
-            do {
-                var account = try await bankService.account()
-                account.balance += tx.amount
-                _ = try await bankService.update(account: account)
-            } catch {
-                print("❌ Failed to save account backup:", error)
-            }
         }
     }
 
@@ -278,17 +264,6 @@ final class TransactionsService: TransactionsServiceProtocol {
             try store.delete(id: id)
         } catch {
             print("Local delete error for tx(\(id)):", error)
-        }
-
-        // Откатываем баланс
-        if let tx = txToDelete {
-            do {
-                var account = try await bankService.account()
-                account.balance -= tx.amount
-                _ = try await bankService.update(account: account)
-            } catch {
-                print("Error updating account after tx delete:", error)
-            }
         }
 
         let path = "transactions/\(id)"

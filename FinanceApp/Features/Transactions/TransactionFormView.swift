@@ -153,13 +153,15 @@ struct TransactionFormView: View {
     private func performSave() async throws {
         let finalDate = merge(date: date, time: time)
         let unsigned  = amountValue!
-        let amountToSend = unsigned // или -unsigned для расходов, если нужно
+        let amountToSend = unsigned
+
+        guard let acc = account else { return }
 
         switch mode {
         case .create:
             let newTx = Transaction(
                 id: .random(in: 10_000...99_999),
-                accountId: account!.id,
+                accountId: acc.id,
                 categoryId: selectedCategory!.id,
                 amount: amountToSend,
                 transactionDate: finalDate,
@@ -168,6 +170,13 @@ struct TransactionFormView: View {
                 updatedAt: Date()
             )
             try await txnService.create(newTx)
+
+            var updatedAccount = acc
+            let signedAmount = direction == .income
+                ? amountToSend
+                : -amountToSend
+            updatedAccount.balance += signedAmount
+            _ = try await accountsService.update(account: updatedAccount)
 
         case .edit(let tx):
             let updatedTx = Transaction(
@@ -181,12 +190,21 @@ struct TransactionFormView: View {
                 updatedAt: Date()
             )
             try await txnService.update(updatedTx)
+
+            var updatedAccount = acc
+            let oldSigned = direction == .income
+                ? tx.amount
+                : -tx.amount
+            let newSigned = direction == .income
+                ? amountToSend
+                : -amountToSend
+            let delta = newSigned - oldSigned
+            updatedAccount.balance += delta
+            _ = try await accountsService.update(account: updatedAccount)
         }
 
-        // После успешного сохранения закроем экран
         dismiss()
     }
-
 
     // MARK: – Data & Actions
     private func filterAmountInput(_ newValue: String) {
@@ -284,6 +302,14 @@ struct TransactionFormView: View {
             Task {
                 do {
                     try await txnService.delete(id: tx.id)
+
+                    var updatedAccount = account!
+                    let signedAmount = direction == .income
+                        ? -tx.amount
+                        : +tx.amount
+                    updatedAccount.balance += signedAmount
+                    _ = try await accountsService.update(account: updatedAccount)
+
                     dismiss()
                 } catch {
                     print("Ошибка при удалении: \(error)")
