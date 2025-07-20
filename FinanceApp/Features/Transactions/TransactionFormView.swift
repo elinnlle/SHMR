@@ -51,8 +51,8 @@ struct TransactionFormView: View {
     }
 
     var body: some View {
-        ZStack {
-            NavigationView {
+        NavigationView {
+            ZStack {
                 Form {
                     Section {
                         HStack {
@@ -83,9 +83,11 @@ struct TransactionFormView: View {
                                     .padding(.vertical, 8)
                             }
                             TextEditor(text: $comment)
-                                .frame(minHeight: 80)
+                                // фиксированная высота вместо гибкой
+                                .frame(height: 80)
                         }
                     }
+
                     if case .edit = mode {
                         Section {
                             Button(role: .destructive, action: deleteAction) {
@@ -95,35 +97,38 @@ struct TransactionFormView: View {
                         }
                     }
                 }
-                .navigationTitle(navigationTitle)
-                .toolbar { toolbarItems }
-                .alert("Заполните все поля", isPresented: $showValidationError) {
-                    Button("Ок", role: .cancel) {}
-                } message: {
-                    Text("Пожалуйста, повторите попытку.")
-                }
-                .sheet(isPresented: $showCategoryPicker) {
-                    CategoryPickerView(
-                        direction: direction,
-                        service: catsService,
-                        selected: $selectedCategory
-                    )
+                .disabled(ui.isLoading)
+
+                if ui.isLoading {
+                    Color.black.opacity(0.1)
+                        .ignoresSafeArea()
+                    ProgressView()
+                        .progressViewStyle(.circular)
                 }
             }
-            if ui.isLoading {
-                Color.black.opacity(0.1)
-                    .ignoresSafeArea()
-                ProgressView()
-                    .progressViewStyle(.circular)
+            .navigationTitle(navigationTitle)
+            .toolbar { toolbarItems }
+            .alert("Заполните все поля", isPresented: $showValidationError) {
+                Button("Ок", role: .cancel) {}
+            } message: {
+                Text("Пожалуйста, повторите попытку.")
+            }
+            .sheet(isPresented: $showCategoryPicker) {
+                CategoryPickerView(
+                    direction: direction,
+                    service: catsService,
+                    selected: $selectedCategory
+                )
+            }
+            .onAppear {
+                Task {
+                    await ui.run {
+                        try await loadInitialData()
+                    }
+                }
             }
         }
-        .onAppear {
-            Task {
-                await ui.run {
-                    try await loadInitialData()
-                }
-            }
-        }
+        .navigationViewStyle(.stack)
     }
 
     // MARK: – Toolbar
