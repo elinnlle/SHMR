@@ -130,6 +130,40 @@ struct InvoiceView: View {
                 }
                 .listRowBackground(Color("AccentColor").opacity(0.2))
             }
+            Section {
+                BalanceHistoryChartView(
+                    points: viewModel.points,
+                    period: viewModel.period
+                )
+            .frame(height: 230)
+            .padding(.horizontal, -14)
+            .listRowBackground(Color.clear)
+            }
+            .transition(.opacity.combined(with: .move(edge: .bottom)))
+            Section {
+                Picker("", selection: $viewModel.period) {
+                    ForEach(ChartPeriod.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .tint(Color.blue)
+                // меняем размер segmented control
+                .scaleEffect(x: 1.35, y: 1.35, anchor: .center)
+                .padding(.horizontal, 27)
+            }
+           .listRowBackground(Color.clear)
+            // меняем шрифт внутри segmented control
+           .onAppear {
+               let font = UIFont.systemFont(ofSize: 11)
+               let attrs: [NSAttributedString.Key: Any] = [
+                   .font: font,
+                   .foregroundColor: UIColor.label
+               ]
+               UISegmentedControl.appearance().setTitleTextAttributes(attrs, for: .normal)
+               UISegmentedControl.appearance().setTitleTextAttributes(attrs, for: .selected)
+           }
+            
         }
     }
 
