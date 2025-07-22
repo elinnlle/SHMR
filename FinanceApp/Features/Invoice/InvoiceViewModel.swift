@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Charts
+import Combine
 
 @MainActor
 final class InvoiceViewModel: ObservableObject {
@@ -21,7 +23,18 @@ final class InvoiceViewModel: ObservableObject {
             }
         }
     }
+    @Published var period: ChartPeriod = .day
+    @Published private var dayPoints:   [BalancePoint] = []
+    @Published private var monthPoints: [BalancePoint] = []
 
+    var points: [BalancePoint] {
+        period == .day ? dayPoints : monthPoints
+    }
+
+    private let txService: TransactionsServiceProtocol = TransactionsService()
+    private let catService: CategoriesServiceProtocol = CategoriesService()
+    private var incomeCategoryIds: Set<Int> = []
+    
     private let service: BankAccountsServiceProtocol
     private var currentAccount: BankAccount?
     private let accountId: Int
@@ -94,8 +107,64 @@ final class InvoiceViewModel: ObservableObject {
 
         if let c = Currency.all.first(where: { $0.code == acc.currency }) {
             currency = c
-        } else {
-            print("Unknown currency:", acc.currency)
+        }
+
+        try await loadCategories()
+        // одновременно загружаем обе серии
+        async let dayLoad   = loadChartData(period: .day)
+        async let monthLoad = loadChartData(period: .month)
+        let (dPts, mPts)    = try await (dayLoad, monthLoad)
+
+        dayPoints   = dPts
+        monthPoints = mPts
+    }
+    
+    private func loadCategories() async throws {
+            let cats = try await catService.categories()
+            incomeCategoryIds = Set(
+                cats.filter { $0.isIncome }.map(\.id)
+            )
+        }
+    
+    // Перечитываем данные для графика
+    func loadChartData(period: ChartPeriod) async throws -> [BalancePoint] {
+        let end = Calendar.current.startOfDay(for: .now)
+        let (start, count, comp): (Date, Int, Calendar.Component) = {
+            switch period {
+            case .day:
+                let s = Calendar.current.date(byAdding: .day, value: -29, to: end)!
+                return (s, 30, .day)
+            case .month:
+                let monthStart = Calendar.current.date(
+                    from: Calendar.current.dateComponents([.year, .month], from: end)
+                )!
+                let s = Calendar.current.date(byAdding: .month, value: -24, to: monthStart)!
+                return (s, 25, .month)
+            }
+        }()
+
+        let txs = try await txService.transactions(
+            for: accountId,
+            from: start,
+            to: Date()
+        )
+        let grouped = Dictionary(grouping: txs) {
+            Calendar.current.dateInterval(of: comp, for: $0.transactionDate)!.start
+        }
+
+        return (0..<count).map { offset in
+            let date = Calendar.current.date(
+                byAdding: comp,
+                value: offset,
+                to: start
+            )!
+            let sum = grouped[date]?.reduce(Decimal.zero) { acc, tx in
+                let signed = incomeCategoryIds.contains(tx.categoryId)
+                           ? tx.amount
+                           : -tx.amount
+                return acc + signed
+            } ?? 0
+            return BalancePoint(date: date, amount: sum)
         }
     }
 

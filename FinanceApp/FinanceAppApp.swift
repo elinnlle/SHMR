@@ -12,16 +12,25 @@ import SwiftData
 struct FinanceAppApp: App {
     @StateObject private var uiEvents = UIEvents()
     @StateObject private var services = ServicesContainer()
+    @State private var isSplashFinished = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(uiEvents)
-                .task {
-                    try? await DataMigrationManager.migrateIfNeeded()
+            if isSplashFinished {
+                ContentView()
+                    .environmentObject(uiEvents)
+                    .task {
+                        try? await DataMigrationManager.migrateIfNeeded()
+                    }
+                    .environmentObject(services)
+                    .environmentObject(services.network)
+            } else {
+                SplashView {
+                    withAnimation(.easeOut) {
+                        isSplashFinished = true
+                    }
                 }
-                .environmentObject(services)
-                .environmentObject(services.network)
+            }
         }
     }
 }

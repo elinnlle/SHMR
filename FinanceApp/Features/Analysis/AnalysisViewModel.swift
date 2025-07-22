@@ -29,6 +29,14 @@ final class AnalysisViewModel {
         self.categoriesService = categoriesService ?? CategoriesService()
     }
     
+    /// Словарь [categoryId: Category]
+    private var categoryMap: [Int: Category] = [:]
+
+    /// Возвращает имя категории по её id
+    func categoryName(for categoryId: Int) -> String {
+        return categoryMap[categoryId]?.name ?? "—"
+    }
+    
     // MARK: Public
     func reload(
         direction: Direction,
@@ -41,6 +49,10 @@ final class AnalysisViewModel {
             let all        = try await service.transactions(for: accountId, from: start, to: end)
             let categories = try await categoriesService.categories()
             let catMap     = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
+            
+            await MainActor.run {
+                self.categoryMap = catMap
+            }
                 
             let filtered = all.filter { tx in
                 guard let cat = catMap[tx.categoryId] else { return false }
@@ -49,6 +61,7 @@ final class AnalysisViewModel {
             let sum = filtered.reduce(.zero) { $0 + $1.amount }
                 
             await MainActor.run {
+                self.categoryMap = catMap
                 self.transactions = filtered
                 self.total        = sum
                 self.applySort(option: sort)
