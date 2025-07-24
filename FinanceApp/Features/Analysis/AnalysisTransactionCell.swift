@@ -14,7 +14,8 @@ final class AnalysisTransactionCell: UITableViewCell {
     // MARK: UI
     private let iconBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.accent.withAlphaComponent(0.2)
+        view.backgroundColor = UIColor(named: "AccentColor")?
+            .withAlphaComponent(0.2)
         view.layer.cornerRadius = 11
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
