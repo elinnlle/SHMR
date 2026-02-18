@@ -377,7 +377,8 @@ extension AnalysisViewController: UITableViewDataSource {
         dateLabel.text = Self.dateFormatter.string(from: date)
         dateLabel.font = .systemFont(ofSize: 17)
         dateLabel.textColor = .label
-        dateLabel.backgroundColor = UIColor.accent.withAlphaComponent(0.2)
+        dateLabel.backgroundColor = UIColor(named: "AccentColor")?
+            .withAlphaComponent(0.2)
         dateLabel.layer.cornerRadius = 8
         dateLabel.clipsToBounds = true
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
